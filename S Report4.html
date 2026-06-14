@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Report Dashboard - Smart Incident Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a56db;
+            --primary-dark: #1e429f;
+            --secondary: #6b7280;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --purple: #8b5cf6;
+            --dark: #111827;
+            --sidebar-bg: #0f172a;
+            --card-bg: #ffffff;
+            --bg: #f1f5f9;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            z-index: 1000;
+            padding: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-brand {
+            padding: 0 24px 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-brand .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .sidebar-brand .brand-text h1 {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .sidebar-brand .brand-text span {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 400;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(26, 86, 219, 0.15);
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-link i {
+            width: 22px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 24px 28px;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .header-left p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .last-update {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+            box-shadow: var(--shadow);
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .reset-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .reset-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .kpi-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .kpi-icon.blue {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+
+        .kpi-icon.orange {
+            background: #fef3c7;
+            color: var(--warning);
+        }
+
+        .kpi-icon.green {
+            background: #d1fae5;
+            color: var(--success);
+        }
+
+        .kpi-icon.purple {
+            background: #ede9fe;
+            color: var(--purple);
+        }
+
+        .kpi-icon.red {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .kpi-icon.teal {
+            background: #ccfbf1;
+            color: #14b8a6;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 6px;
+        }
+
+        .kpi-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-change.up {
+            color: var(--success);
+        }
+
+        .kpi-change.down {
+            color: var(--danger);
+        }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .chart-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .chart-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .chart-action-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+        }
+
+        .chart-container.small {
+            height: 200px;
+        }
+
+        .sections-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .section-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            width: 100%;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-number {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .section-inner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .inner-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .inner-card-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .big-number {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .big-number-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .city-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .city-bar-name {
+            width: 70px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .city-bar-track {
+            flex: 1;
+            height: 22px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .city-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #3b82f6);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            transition: width 1s ease;
+        }
+
+        .stars {
+            color: #fbbf24;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .team-rank {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .rank-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .rank-1 {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .rank-2 {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .rank-3 {
+            background: #fed7aa;
+            color: #c2410c;
+        }
+
+        .rank-other {
+            background: #f1f5f9;
+            color: var(--text-muted);
+        }
+
+        .rank-info {
+            flex: 1;
+        }
+
+        .rank-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .rank-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .rank-score {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .heatmap-placeholder {
+            height: 160px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            color: var(--text-muted);
+            border: 2px dashed #cbd5e1;
+        }
+
+        .heatmap-placeholder i {
+            font-size: 32px;
+            color: var(--primary);
+        }
+
+        @media (max-width: 1400px) {
+            .charts-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .charts-row .chart-card:first-child {
+                grid-column: span 2;
+            }
+
+            .sections-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar .brand-text,
+            .sidebar .nav-link span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 70px;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-row .chart-card:first-child {
+                grid-column: span 1;
+            }
+
+            .sections-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .kpi-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+    <base target="_blank">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+            <div class="brand-text">
+                <h1>S-REPORT</h1>
+                <span>Dashboard</span>
+            </div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link active" onclick="showSection('overview')">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('geography')">
+                    <i class="fas fa-globe"></i>
+                    <span>Geography</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('performance')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Performance</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('quality')">
+                    <i class="fas fa-brain"></i>
+                    <span>Quality & AI</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('teams')">
+                    <i class="fas fa-users"></i>
+                    <span>Teams</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="header">
+            <div class="header-left">
+                <h1>S-Report Dashboard</h1>
+                <p>Smart Incident Management & Analytics</p>
+            </div>
+            <div class="header-right">
+                <div class="last-update">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>Last Update: <span id="lastUpdate">25 May 2025 10:30 AM</span></span>
+                </div>
+                <div class="filter-group">
+                    <button class="filter-btn">
+                        <i class="far fa-calendar"></i>
+                        <span>1/4/2025</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+                    </button>
+                    <button class="filter-btn">
+                        <i class="fas fa-minus" style="font-size:10px;"></i>
+                        <span>25/5/2025</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+                    </button>
+                    <button class="filter-btn">
+                        <span>All</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+                    </button>
+                    <button class="filter-btn">
+                        <span>All</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+                    </button>
+                    <button class="filter-btn">
+                        <span>All</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+                    </button>
+                    <button class="filter-btn reset-btn" onclick="resetFilters()">
+                        <i class="fas fa-sync-alt"></i>
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-row">
+            <div class="kpi-card animate-in" style="animation-delay:0.1s">
+                <div class="kpi-header">
+                    <span class="kpi-title">Total Reports</span>
+                    <div class="kpi-icon blue"><i class="fas fa-file-alt"></i></div>
+                </div>
+                <div class="kpi-value" id="totalReports">14,260</div>
+                <div class="kpi-change up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>12.6% vs Last Month</span>
+                </div>
+            </div>
+            <div class="kpi-card animate-in" style="animation-delay:0.15s">
+                <div class="kpi-header">
+                    <span class="kpi-title">Open Reports</span>
+                    <div class="kpi-icon orange"><i class="far fa-clock"></i></div>
+                </div>
+                <div class="kpi-value" id="openReports">8,167</div>
+                <div class="kpi-change up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>8.3% vs Last Month</span>
+                </div>
+            </div>
+            <div class="kpi-card animate-in" style="animation-delay:0.2s">
+                <div class="kpi-header">
+                    <span class="kpi-title">Closed Reports</span>
+                    <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
+                </div>
+                <div class="kpi-value" id="closedReports">6,093</div>
+                <div class="kpi-change up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>15.4% vs Last Month</span>
+                </div>
+            </div>
+            <div class="kpi-card animate-in" style="animation-delay:0.25s">
+                <div class="kpi-header">
+                    <span class="kpi-title">Resolution Rate</span>
+                    <div class="kpi-icon purple"><i class="fas fa-chart-pie"></i></div>
+                </div>
+                <div class="kpi-value" id="resolutionRate">42.7%</div>
+                <div class="kpi-change up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>5.7% vs Last Month</span>
+                </div>
+            </div>
+            <div class="kpi-card animate-in" style="animation-delay:0.3s">
+                <div class="kpi-header">
+                    <span class="kpi-title">Total Users</span>
+                    <div class="kpi-icon red"><i class="fas fa-user-friends"></i></div>
+                </div>
+                <div class="kpi-value" id="totalUsers">1,248</div>
+                <div class="kpi-change up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>10.1% vs Last Month</span>
+                </div>
+            </div>
+            <div class="kpi-card animate-in" style="animation-delay:0.35s">
+                <div class="kpi-header">
+                    <span class="kpi-title">Total Notifications</span>
+                    <div class="kpi-icon teal"><i class="far fa-bell"></i></div>
+                </div>
+                <div class="kpi-value" id="totalNotifications">5,612</div>
+                <div class="kpi-change up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>7.3% vs Last Month</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Charts -->
+        <div class="charts-row">
+            <div class="chart-card animate-in" style="animation-delay:0.4s">
+                <div class="chart-header">
+                    <span class="chart-title">Reports Over Time</span>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn"><i class="fas fa-download"></i></button>
+                        <button class="chart-action-btn"><i class="fas fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="reportsOverTimeChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card animate-in" style="animation-delay:0.45s">
+                <div class="chart-header">
+                    <span class="chart-title">Status Breakdown</span>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                </div>
+                <div class="chart-container small">
+                    <canvas id="statusBreakdownChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card animate-in" style="animation-delay:0.5s">
+                <div class="chart-header">
+                    <span class="chart-title">Incident Categories</span>
+                    <div class="chart-actions">
+                        <button class="chart-action-btn"><i class="fas fa-ellipsis-h"></i></button>
+                    </div>
+                </div>
+                <div class="chart-container small">
+                    <canvas id="incidentCategoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sections Grid -->
+        <div class="sections-grid">
+
+            <!-- Geography -->
+            <div class="section-card animate-in" style="animation-delay:0.55s">
+                <div class="section-header">
+                    <div class="section-number">2</div>
+                    <span class="section-title">Geography Insights</span>
+                </div>
+                <div class="section-inner-grid">
+                    <div class="inner-card">
+                        <div class="inner-card-title">Reports per City</div>
+                        <div id="cityBars" style="margin-top:8px;"></div>
+                    </div>
+                    <div class="inner-card">
+                        <div class="inner-card-title">Hotspots (Heatmap)</div>
+                        <div class="heatmap-placeholder">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span style="font-size:12px;">Interactive Map</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-inner-grid" style="margin-top:12px;">
+                    <div class="inner-card">
+                        <div class="inner-card-title">Geographical Growth</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                            <i class="fas fa-arrow-up" style="color:var(--success);font-size:20px;"></i>
+                            <span class="big-number" style="font-size:22px;">18.5%</span>
+                        </div>
+                        <span class="big-number-sub">vs Last Month</span>
+                        <div style="height:40px;margin-top:8px;">
+                            <canvas id="geoGrowthChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="inner-card">
+                        <div class="inner-card-title">Reports by Area Type</div>
+                        <div style="height:100px;margin-top:4px;">
+                            <canvas id="areaTypeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance -->
+            <div class="section-card animate-in" style="animation-delay:0.6s">
+                <div class="section-header">
+                    <div class="section-number">3</div>
+                    <span class="section-title">Operational Performance</span>
+                </div>
+                <div class="section-inner-grid">
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">Avg. Time to Assign</div>
+                        <div class="big-number" style="color:var(--primary);">30m</div>
+                        <div class="kpi-change down" style="justify-content:center;margin-top:4px;">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>12.4% vs Last Month</span>
+                        </div>
+                    </div>
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">MTTR</div>
+                        <div class="big-number" style="color:var(--warning);">2h 44m</div>
+                        <div class="kpi-change down" style="justify-content:center;margin-top:4px;">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>8.7% vs Last Month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-card" style="margin-top:12px;text-align:center;">
+                    <div class="inner-card-title">Resolution Rate</div>
+                    <div class="big-number" style="color:var(--success);">42.7%</div>
+                    <div class="kpi-change up" style="justify-content:center;margin-top:4px;">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>5.7% vs Last Month</span>
+                    </div>
+                </div>
+                <div class="inner-card" style="margin-top:12px;">
+                    <div class="inner-card-title">Resolution Rate Over Time</div>
+                    <div style="height:80px;">
+                        <canvas id="resolutionRateChart"></canvas>
+                    </div>
+                </div>
+                <div class="inner-card" style="margin-top:12px;">
+                    <div class="inner-card-title">Average Time (Hours) per Team</div>
+                    <div style="height:100px;">
+                        <canvas id="teamTimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality & AI -->
+            <div class="section-card animate-in" style="animation-delay:0.65s">
+                <div class="section-header">
+                    <div class="section-number">4</div>
+                    <span class="section-title">Quality & AI</span>
+                </div>
+                <div class="section-inner-grid">
+                    <div class="inner-card">
+                        <div class="inner-card-title">Fake vs Valid Reports</div>
+                        <div style="height:110px;">
+                            <canvas id="fakeValidChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">Average Rating</div>
+                        <div class="big-number">3.7 / 5</div>
+                        <div class="stars" style="margin-top:4px;">★★★☆☆</div>
+                        <span class="big-number-sub">Based on 1,248 ratings</span>
+                    </div>
+                </div>
+                <div class="inner-card" style="margin-top:12px;">
+                    <div class="inner-card-title">Reliability Score Distribution</div>
+                    <div style="height:90px;">
+                        <canvas id="reliabilityChart"></canvas>
+                    </div>
+                </div>
+                <div class="section-inner-grid" style="margin-top:12px;">
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">AI Accuracy</div>
+                        <div class="big-number" style="color:var(--success);">94.8%</div>
+                        <div class="kpi-change up" style="justify-content:center;margin-top:4px;">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>6.3% vs Last Month</span>
+                        </div>
+                    </div>
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">Time Saved by AI</div>
+                        <div class="big-number" style="color:var(--primary);">835</div>
+                        <span class="big-number-sub">Hours This Month</span>
+                    </div>
+                </div>
+                <div class="inner-card" style="margin-top:12px;">
+                    <div class="inner-card-title">AI Priority Distribution</div>
+                    <div style="height:100px;">
+                        <canvas id="aiPriorityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teams -->
+            <div class="section-card animate-in" style="animation-delay:0.7s">
+                <div class="section-header">
+                    <div class="section-number">5</div>
+                    <span class="section-title">Teams Performance</span>
+                </div>
+                <div class="section-inner-grid">
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">Most Active Team</div>
+                        <div class="big-number" style="font-size:18px;">Team 3</div>
+                        <div style="font-size:13px;font-weight:700;color:var(--dark);margin-top:4px;">668 Reports</div>
+                    </div>
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">Avg. Reports per Team</div>
+                        <div class="big-number">2,037</div>
+                        <div class="kpi-change up" style="justify-content:center;margin-top:4px;">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>9.1% vs Last Month</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="inner-card" style="margin-top:12px;">
+                    <div class="inner-card-title">Teams Ranking (by Closed Reports)</div>
+                    <div id="teamRanking" style="margin-top:8px;"></div>
+                </div>
+                <div class="inner-card" style="margin-top:12px;">
+                    <div class="inner-card-title">Reports per Team</div>
+                    <div style="height:100px;">
+                        <canvas id="reportsPerTeamChart"></canvas>
+                    </div>
+                </div>
+                <div class="section-inner-grid" style="margin-top:12px;">
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">Team Workload</div>
+                        <div style="height:80px;display:flex;align-items:center;justify-content:center;">
+                            <svg width="100" height="60" viewBox="0 0 100 60">
+                                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" stroke-width="10"
+                                    stroke-linecap="round" />
+                                <path d="M 10 50 A 40 40 0 0 1 82 18" fill="none" stroke="var(--primary)"
+                                    stroke-width="10" stroke-linecap="round" />
+                                <text x="50" y="45" text-anchor="middle" font-size="16" font-weight="800"
+                                    fill="var(--dark)">819.0</text>
+                            </svg>
+                        </div>
+                        <span class="big-number-sub">Avg. Open Reports per Team</span>
+                    </div>
+                    <div class="inner-card" style="text-align:center;">
+                        <div class="inner-card-title">Top Rated Team</div>
+                        <div style="font-size:32px;margin:4px 0;">🏆</div>
+                        <div class="big-number" style="font-size:16px;">Team 6</div>
+                        <div class="stars" style="margin-top:4px;">★★★★☆ 4.8/5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        let dashboardData = null;
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch("http://localhost:3000/api/dashboard");
+                const result = await res.json();
+
+                if (!result.success) throw new Error("API Failed");
+
+                dashboardData = result.data;
+
+                updateKPIs();
+                renderCharts();
+
+            } catch (err) {
+                console.error("Dashboard Error:", err);
+                alert("Failed to load dashboard data");
+            }
+        }
+        function updateKPIs() {
+            document.getElementById("totalReports").textContent =
+                dashboardData.kpi.totalReports.toLocaleString();
+
+            document.getElementById("openReports").textContent =
+                dashboardData.kpi.openReports.toLocaleString();
+
+            document.getElementById("closedReports").textContent =
+                dashboardData.kpi.closedReports.toLocaleString();
+
+            document.getElementById("resolutionRate").textContent =
+                dashboardData.kpi.resolutionRate + "%";
+
+            document.getElementById("totalUsers").textContent =
+                dashboardData.kpi.totalUsers.toLocaleString();
+
+            document.getElementById("totalNotifications").textContent =
+                dashboardData.kpi.totalNotifications.toLocaleString();
+        }
+
+
+        function renderCharts() {
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748b';
+
+            // 1. Reports Over Time
+            new Chart(document.getElementById('reportsOverTimeChart'), {
+                type: 'line',
+                data: {
+                    labels: dashboardData.reportsOverTime.labels,
+                    datasets: [{
+                        data: dashboardData.reportsOverTime.data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 2. Status Breakdown
+            new Chart(document.getElementById('statusBreakdownChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: dashboardData.statusBreakdown.labels,
+                    datasets: [{
+                        data: dashboardData.statusBreakdown.data,
+                        backgroundColor: dashboardData.statusBreakdown.colors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+
+            // 3. Incident Categories
+            new Chart(document.getElementById('incidentCategoriesChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: dashboardData.incidentCategories.labels,
+                    datasets: [{
+                        data: dashboardData.incidentCategories.data,
+                        backgroundColor: dashboardData.incidentCategories.colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+
+            // 4. Resolution Rate
+            new Chart(document.getElementById('resolutionRateChart'), {
+                type: 'line',
+                data: {
+                    labels: dashboardData.resolutionRateOverTime.labels,
+                    datasets: [{
+                        data: dashboardData.resolutionRateOverTime.data,
+                        borderColor: '#3b82f6',
+                        fill: true
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 5. Team Time
+            new Chart(document.getElementById('teamTimeChart'), {
+                type: 'bar',
+                data: {
+                    labels: dashboardData.teamTimeData.labels,
+                    datasets: [
+                        {
+                            data: dashboardData.teamTimeData.assignTime,
+                            backgroundColor: '#3b82f6'
+                        },
+                        {
+                            data: dashboardData.teamTimeData.mttr,
+                            backgroundColor: '#f59e0b'
+                        }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 6. Fake vs Valid
+            new Chart(document.getElementById('fakeValidChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: dashboardData.fakeValid.labels,
+                    datasets: [{
+                        data: dashboardData.fakeValid.data,
+                        backgroundColor: dashboardData.fakeValid.colors
+                    }]
+                }
+            });
+
+            // 7. Reliability
+            new Chart(document.getElementById('reliabilityChart'), {
+                type: 'bar',
+                data: {
+                    labels: dashboardData.reliability.labels,
+                    datasets: [{
+                        data: dashboardData.reliability.data,
+                        backgroundColor: '#3b82f6'
+                    }]
+                }
+            });
+
+            // 8. AI Priority
+            new Chart(document.getElementById('aiPriorityChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: dashboardData.aiPriority.labels,
+                    datasets: [{
+                        data: dashboardData.aiPriority.data,
+                        backgroundColor: dashboardData.aiPriority.colors
+                    }]
+                }
+            });
+
+            // 9. Reports per Team
+            new Chart(document.getElementById('reportsPerTeamChart'), {
+                type: 'bar',
+                data: {
+                    labels: dashboardData.reportsPerTeam.labels,
+                    datasets: [{
+                        data: dashboardData.reportsPerTeam.data,
+                        backgroundColor: '#3b82f6'
+                    }]
+                }
+            });
+
+            // 10. Area Type
+            new Chart(document.getElementById('areaTypeChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: dashboardData.areaType.labels,
+                    datasets: [{
+                        data: dashboardData.areaType.data,
+                        backgroundColor: dashboardData.areaType.colors
+                    }]
+                }
+            });
+        }
+
+        // Start
+        loadDashboard();
+    </script>
+
+</html>
+</body>
